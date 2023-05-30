@@ -13,6 +13,7 @@ app = Flask(__name__)
 def process_text():
     data = request.get_json()
     text = data.get("text")
+    print(text)
     input_vector = vectorizer.transform([text])
     pred = model.predict(input_vector)
     print(pred)
