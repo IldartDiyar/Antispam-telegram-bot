@@ -27,7 +27,6 @@ func main() {
 	}
 
 	myBot := handlers.NewBot(bot, make(map[string]int))
-
 	bot.Handle(tele.OnText, myBot.TextHandler)
 	bot.Start()
 }

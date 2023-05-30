@@ -21,17 +21,27 @@ func NewBot(bot *tele.Bot, mapa map[string]int) *Bot {
 }
 
 func (bot *Bot) TextHandler(ctx tele.Context) error {
-	isAdmin, err := bot.isAdmin(ctx.Chat(), ctx.Sender())
+	_, err := bot.isAdmin(ctx.Chat(), ctx.Sender())
 	if err != nil {
 		return err
+	}
+
+	foundLink, flag := usecase.CheckLink(ctx.Message().Text)
+	if flag {
+		log.Println(foundLink)
+		negative := usecase.VirusTotal(foundLink)
+		if negative {
+			ctx.Send("Хабарлама ішіндегі ссылка қауіпті, хабарлама өшірілді, ссылка: " + foundLink)
+			bot.Bot.Delete(ctx.Message())
+		}
+		return nil
 	}
 	res, err := usecase.SpamWords(ctx.Message().Text)
 	if err != nil {
 		return err
 	}
-	log.Println("asd")
-	if res && !isAdmin {
-		ctx.Send("Message contains a spam.")
+	if res {
+		ctx.Send("Message contains a spam. Author is " + ctx.Sender().Username)
 		bot.warnCount[ctx.Sender().Username]++
 		bot.Bot.Delete(ctx.Message())
 		if bot.warnCount[ctx.Sender().Username] == 3 {
@@ -40,15 +50,7 @@ func (bot *Bot) TextHandler(ctx tele.Context) error {
 			ctx.Send("Пользователь " + user.User.Username + " был кикнут из чата.")
 			delete(bot.warnCount, ctx.Sender().Username)
 		}
-	}
-
-	foundLink, flag := usecase.CheckLink(ctx.Message().Text)
-	if flag || !isAdmin {
-		negative := usecase.VirusTotal(foundLink)
-		if negative {
-			ctx.Send("Хабарлама ішіндегі ссылка қауіпті, хабарлама өшірілді, ссылка: " + foundLink)
-			bot.Bot.Delete(ctx.Message())
-		}
+		return nil
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"io"
 	"log"
 	"os"
 )
@@ -11,5 +12,6 @@ func InitLogger() {
 	if err != nil {
 		log.Println("Error opening file: ", err)
 	}
-	log.SetOutput(f)
+	multiWriter := io.MultiWriter(os.Stdout, f)
+	log.SetOutput(multiWriter)
 }
